@@ -4,57 +4,90 @@ import React, { useState } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Mail, Phone, MapPin, ExternalLink, Briefcase, GraduationCap, Award, Layers, ChevronLeft, ChevronRight, Globe, Code2, Download, CheckCircle2, Copy, Send } from "lucide-react";
 
-// Interactive Project Card Component with Built-in Image Slider
+// Interactive Project Card Component with Built-in Image Slider and Condition-Based Links
 function ProjectCard({ project }: { project: any }) {
   const [currentImgIdx, setCurrentImgIdx] = useState(0);
 
   const nextSlide = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevents link navigation when clicking carousel arrows
     e.stopPropagation();
     setCurrentImgIdx((prev) => (prev === project.images.length - 1 ? 0 : prev + 1));
   };
 
   const prevSlide = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevents link navigation when clicking carousel arrows
     e.stopPropagation();
     setCurrentImgIdx((prev) => (prev === 0 ? project.images.length - 1 : prev - 1));
+  };
+
+  // Helper to conditionally wrap elements in a link if it exists
+  const LinkWrapper = ({ children }: { children: React.ReactNode }) => {
+    if (project.link) {
+      return (
+        <a href={project.link} target="_blank" rel="noopener noreferrer" className="block overflow-hidden relative">
+          {children}
+        </a>
+      );
+    }
+    return <div className="relative overflow-hidden">{children}</div>;
   };
 
   return (
     <div className="border border-[#0d2827]/10 bg-white/70 backdrop-blur-md overflow-hidden flex flex-col justify-between shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl group">
       
-      {/* Photo Carousel Frame - Fully Responsive Aspect Ratio */}
-      <div className="relative w-full aspect-[16/10] bg-[#e3f2ed] overflow-hidden border-b border-[#0d2827]/10">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={currentImgIdx}
-            src={project.images[currentImgIdx]}
-            alt={`${project.title} screenshot ${currentImgIdx + 1}`}
-            initial={{ opacity: 0, x: 15 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -15 }}
-            transition={{ duration: 0.25 }}
-            className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
-          />
-        </AnimatePresence>
+      {/* Photo Carousel Frame - Clickable if link exists */}
+      <LinkWrapper>
+        <div className="relative w-full aspect-[16/10] bg-[#e3f2ed] border-b border-[#0d2827]/10">
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={currentImgIdx}
+              src={project.images[currentImgIdx]}
+              alt={`${project.title} screenshot ${currentImgIdx + 1}`}
+              initial={{ opacity: 0, x: 15 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -15 }}
+              transition={{ duration: 0.25 }}
+              className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
+            />
+          </AnimatePresence>
 
-        <button 
-          onClick={prevSlide}
-          className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 text-[#0d2827] border border-[#0d2827]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-sm hover:bg-white rounded-full"
-        >
-          <ChevronLeft size={14} />
-        </button>
-        <button 
-          onClick={nextSlide}
-          className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 text-[#0d2827] border border-[#0d2827]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-sm hover:bg-white rounded-full"
-        >
-          <ChevronRight size={14} />
-        </button>
-      </div>
+          {project.images.length > 1 && (
+            <>
+              <button 
+                onClick={prevSlide}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 text-[#0d2827] border border-[#0d2827]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-sm hover:bg-white rounded-full z-20"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <button 
+                onClick={nextSlide}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 bg-white/90 text-[#0d2827] border border-[#0d2827]/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shadow-sm hover:bg-white rounded-full z-20"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </>
+          )}
+        </div>
+      </LinkWrapper>
 
       {/* Main Metadata Text Container */}
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
-          <h3 className="text-lg font-bold text-[#0d2827] flex items-center justify-between group-hover:text-teal-700 transition-colors">
-            {project.title} <ExternalLink size={15} className="text-teal-600/50" />
+          <h3 className="text-lg font-bold text-[#0d2827] transition-colors">
+            {project.link ? (
+              <a 
+                href={project.link} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-flex items-center gap-1.5 hover:text-teal-700 group-hover:text-teal-700"
+              >
+                {project.title} <ExternalLink size={15} className="text-teal-600/50" />
+              </a>
+            ) : (
+              <span className="flex items-center justify-between">
+                {project.title}
+              </span>
+            )}
           </h3>
           <p className="text-sm text-[#2c4e4c] mt-2 font-sans leading-relaxed line-clamp-3 font-medium">
             {project.desc}
@@ -112,13 +145,15 @@ export default function Home() {
     { name: "Node.js / Express", percentage: 85 }
   ];
 
+  // Embedded verified live production paths to project registry arrays
   const dynamicProjectList = [
     { 
       title: "BookStore App", 
       category: "Full-Stack",
       desc: "A full-stack bookstore platform engineered for smooth catalog navigation, quick content rendering, and asynchronous checking loops.", 
       tech: ["React.js", "Node.js", "MongoDB", "Tailwind CSS"],
-      images: ["/images/bookstore-1.png", "/images/bookstore-2.png", "/images/bookstore-3.png"]
+      images: ["/images/bookstore-1.png", "/images/bookstore-2.png", "/images/bookstore-3.png"],
+      link: "https://book-store-app-kappa-flax.vercel.app/"
     },
     { 
       title: "Farm Fusion", 
@@ -132,7 +167,8 @@ export default function Home() {
       category: "Backend",
       desc: "An optimized guest menu layout system built with interactive booking loops and clean responsive interface states.", 
       tech: ["JavaScript", "HTML5", "CSS3"],
-      images: ["/images/rest-1.png", "/images/rest-2.png", "/images/rest-3.png"]
+      images: ["/images/rest-1.png", "/images/rest-2.png", "/images/rest-3.png"],
+      link: "https://resturant-app-lemon.vercel.app/"
     },
     {
       title: "Organic Food Store",
@@ -146,7 +182,8 @@ export default function Home() {
       category: "Frontend",
       desc: "A personal portfolio for the user.",
       tech: ["HTML", "CSS", "JavaScript"],
-      images: ["/images/port-1.png", "/images/port-2.png", "/images/port-3.png"]
+      images: ["/images/port-1.png", "/images/port-2.png", "/images/port-3.png"],
+      link: "https://portfolio-steel-nu-22.vercel.app/"
     }
   ];
 
@@ -171,7 +208,6 @@ export default function Home() {
           
           <motion.div variants={popIn} className="border border-[#0d2827]/10 bg-white/80 backdrop-blur-md p-6 shadow-sm rounded-2xl relative">
             
-            {/* Responsively Framed Profile Image Layout Container */}
             <div className="relative w-full aspect-[16/10] sm:aspect-square lg:aspect-[4/3] xl:aspect-square overflow-hidden border border-[#0d2827]/10 mb-6 rounded-xl bg-[#e3f2ed]">
               <img 
                 src="/images/profile.png" 
@@ -194,9 +230,8 @@ export default function Home() {
             </div>
 
             <div className="mt-6">
-              {/* Corrected download source path identifier */}
               <a 
-                href="/resume.pdf/cv.pdf" 
+                href="/resume.pdf/Main CV.pdf" 
                 download="Asiful_Islam_Sajid_CV.pdf"
                 className="w-full flex items-center justify-center gap-2 bg-[#0d2827] text-white hover:bg-teal-950 px-4 py-3 rounded-xl text-sm font-bold tracking-wider uppercase transition-all shadow-md shadow-teal-950/10 hover:-translate-y-0.5 cursor-pointer"
               >
@@ -240,7 +275,6 @@ export default function Home() {
         {/* ================= RIGHT MAIN PANEL ================= */}
         <div className="lg:col-span-8 space-y-6">
           
-          {/* Dashboard Metrics Status Block */}
           <motion.div variants={popIn} className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
               { label: "Availability", value: "Available for Work" },
@@ -271,12 +305,11 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* Project Showroom Section with Expanded Filter Options */}
+          {/* Project Showroom */}
           <div className="space-y-4">
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b border-[#0d2827]/10 pb-2">
               <h2 className="text-xs font-bold uppercase tracking-widest font-mono text-teal-600/80 ml-1">Project Showroom</h2>
               
-              {/* Multi-Button Responsive Filter Navigation Container */}
               <div className="flex flex-wrap bg-[#e3f2ed] p-1 rounded-xl border border-[#0d2827]/5 gap-1 font-mono text-[11px] font-bold">
                 {["All", "Full-Stack", "Frontend", "Backend"].map((filter) => (
                   <button
@@ -311,7 +344,6 @@ export default function Home() {
               </AnimatePresence>
             </motion.div>
             
-            {/* Edge-case container when filters return empty arrays */}
             {filteredProjects.length === 0 && (
               <p className="text-xs font-mono text-[#3b5e5c] italic pl-1 pt-2">No projects matching this filter yet.</p>
             )}
@@ -342,7 +374,7 @@ export default function Home() {
               <div className="w-full md:w-auto flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleCopyEmail}
-                  className="flex items-center justify-center gap-2 border border-[#0d2827]/10 hover:border-[#0d2827]/30 bg-white px-4 py-2.5 rounded-xl text-xs font-mono font-bold text-[#0d2827] shadow-sm hover:shadow active:scale-98 transition-all cursor-pointer Minimal Copy Button"
+                  className="flex items-center justify-center gap-2 border border-[#0d2827]/10 hover:border-[#0d2827]/30 bg-white px-4 py-2.5 rounded-xl text-xs font-mono font-bold text-[#0d2827] shadow-sm hover:shadow active:scale-98 transition-all cursor-pointer"
                 >
                   <Copy size={14} className={copied ? "text-emerald-600" : "text-teal-600"} />
                   {copied ? "Address Copied!" : "Copy Email Address"}
@@ -359,6 +391,7 @@ export default function Home() {
             </div>
           </motion.div>
 
+          {/* Technical Skills */}
           <motion.div variants={popIn} className="border border-[#0d2827]/10 bg-white/80 backdrop-blur-md p-6 shadow-sm rounded-2xl">
             <div className="flex items-center gap-2 mb-6 text-[#0d2827] font-mono text-xs uppercase tracking-widest font-bold">
               <Layers size={14} className="text-teal-600" />
@@ -386,6 +419,7 @@ export default function Home() {
             </div>
           </motion.div>
 
+          {/* Focus Areas */}
           <motion.div 
             variants={focusContainerVariants}
             initial="hidden"
